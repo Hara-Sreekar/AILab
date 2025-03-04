@@ -1,0 +1,111 @@
+ from queue import PriorityQueue
+
+class EightPuzzle:
+    def __init__(self, initial, goal):
+        self.initial = initial
+        self.goal = goal
+        self.empty_pos = self.find_empty(initial)
+
+    def find_empty(self, state):
+        """Find the position of the empty tile (0)."""
+        for i in range(3):
+            for j in range(3):
+                if state[i][j] == 0:
+                    return (i, j)
+        return None
+
+    def is_goal(self, state):
+        """Check if the current state matches the goal state."""
+        return state == self.goal
+
+    def move(self, state, empty_pos, direction):
+        """Move the empty space in the given direction and return the new state."""
+        x, y = empty_pos
+        new_state = [row[:] for row in state]  # Deep copy
+
+        if direction == "up" and x > 0:
+            new_state[x][y], new_state[x - 1][y] = new_state[x - 1][y], new_state[x][y]
+            return new_state, (x - 1, y)
+        elif direction == "down" and x < 2:
+            new_state[x][y], new_state[x + 1][y] = new_state[x + 1][y], new_state[x][y]
+            return new_state, (x + 1, y)
+        elif direction == "left" and y > 0:
+            new_state[x][y], new_state[x][y - 1] = new_state[x][y - 1], new_state[x][y]
+            return new_state, (x, y - 1)
+        elif direction == "right" and y < 2:
+            new_state[x][y], new_state[x][y + 1] = new_state[x][y + 1], new_state[x][y]
+            return new_state, (x, y + 1)
+        else:
+            return None, empty_pos  # Invalid move
+
+    def heuristic(self, state):
+        """Calculate the Manhattan Distance heuristic for A* search."""
+        dist = 0
+        for i in range(3):
+            for j in range(3):
+                if state[i][j] != 0:
+                    # Find correct position of the tile in goal state
+                    goal_x, goal_y = [(x, y) for x in range(3) for y in range(3) if self.goal[x][y] == state[i][j]][0]
+                    dist += abs(i - goal_x) + abs(j - goal_y)
+        return dist
+
+    def solve(self):
+        """Solve the 8-puzzle using A* search algorithm."""
+        visited = set()
+        pq = PriorityQueue()
+        pq.put((0 + self.heuristic(self.initial), 0, self.initial, self.empty_pos, []))  # (f, g, state, empty_pos, path)
+
+        while not pq.empty():
+            _, cost, state, empty_pos, path = pq.get()
+
+            if self.is_goal(state):
+                return path  # Return the sequence of moves to reach the goal
+
+            visited.add(tuple(tuple(row) for row in state))
+
+            for direction in ["up", "down", "left", "right"]:
+                new_state, new_empty_pos = self.move(state, empty_pos, direction)
+
+                if new_state and tuple(tuple(row) for row in new_state) not in visited:
+                    new_cost = cost + 1  # g(n) (cost from start)
+                    f_score = new_cost + self.heuristic(new_state)  # f(n) = g(n) + h(n)
+                    pq.put((f_score, new_cost, new_state, new_empty_pos, path + [(direction, new_state)]))
+
+        return None  # No solution found
+
+
+def print_solution(initial, solution):
+    """Print the steps from initial to goal state."""
+    state = initial
+    print("Initial State:")
+    for row in state:
+        print(row)
+    print("-" * 10)
+
+    for step, (move, new_state) in enumerate(solution, 1):
+        print(f"Step {step}: Move {move}")
+        for row in new_state:
+            print(row)
+        print("-" * 10)
+
+
+# Example Usage
+initial_state = [
+    [8, 6, 7],
+    [2, 5, 4],
+    [3, 0, 1]  # 0 represents the empty space
+]
+
+goal_state_increment = [
+    [1, 2, 3],
+    [4, 5, 6],
+    [7, 8, 0]  # Incremental order
+]
+
+puzzle = EightPuzzle(initial_state, goal_state_increment)
+solution = puzzle.solve()
+
+if solution:
+    print_solution(initial_state, solution)
+else:
+    print("No solution possible.")
