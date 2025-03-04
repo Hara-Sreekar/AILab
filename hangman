@@ -1,0 +1,136 @@
+import random
+
+word_list = ["gitam", "sreekar", "computer", "laptop", "artificial", "intelligence", "master", "student"]
+MAX_ATTEMPTS = 6
+
+# Hangman stages (corresponding to wrong guesses)
+HANGMAN_PICS = [
+    """
+       ------
+       |    |
+            |
+            |
+            |
+            |
+    =========
+    """,
+    """
+       ------
+       |    |
+       O    |
+            |
+            |
+            |
+    =========
+    """,
+    """
+       ------
+       |    |
+       O    |
+       |    |
+            |
+            |
+    =========
+    """,
+    """
+       ------
+       |    |
+       O    |
+      /|    |
+            |
+            |
+    =========
+    """,
+    """
+       ------
+       |    |
+       O    |
+      /|\\   |
+            |
+            |
+    =========
+    """,
+    """
+       ------
+       |    |
+       O    |
+      /|\\   |
+      /     |
+            |
+    =========
+    """,
+    """
+       ------
+       |    |
+       O    |
+      /|\\   |
+      / \\   |
+            |
+    =========
+    """
+]
+
+class HangmanGame:
+    def __init__(self, secret_word):
+        self.secret_word = secret_word
+        self.word_length = len(secret_word)
+        self.current_guess = ['_'] * self.word_length
+        self.attempts = 0
+        self.given_letters = set()
+
+    def give_hint(self):
+        available_letters = set(self.secret_word) - self.given_letters
+        if available_letters:
+            hint_letter = random.choice(list(available_letters))
+            self.given_letters.add(hint_letter)
+            return hint_letter
+        return None
+
+    def make_guess(self, guessed_positions):
+        correct_guess = False
+
+        for letter, position in guessed_positions:
+            if 0 <= position < self.word_length and self.secret_word[position] == letter:
+                self.current_guess[position] = letter
+                correct_guess = True
+
+        if not correct_guess:
+            self.attempts += 1  # Only increase attempts if the guess was incorrect
+
+        return '_' not in self.current_guess  # Returns True if the word is fully guessed
+
+    def check_game_status(self):
+        if '_' not in self.current_guess:
+            return "P2 Wins! Successfully formed the word."
+        if self.attempts >= MAX_ATTEMPTS:
+            return f"P1 Wins! The word was '{self.secret_word}'."
+        return None
+
+def play_hangman():
+    secret_word = random.choice(word_list)
+    game = HangmanGame(secret_word)
+
+    print(f"Game started! Word Length: {game.word_length}")
+
+    while True:
+        print(HANGMAN_PICS[game.attempts])  # Display the Hangman body based on attempts
+
+        hint_letter = game.give_hint()
+        if hint_letter:
+            print(f"P1 gives hint: {hint_letter}")
+
+        available_positions = [i for i, char in enumerate(game.current_guess) if char == '_']
+        if available_positions:
+            guessed_positions = [(hint_letter, random.choice(available_positions))]
+            if game.make_guess(guessed_positions):
+                print("P2 successfully placed letters:", ''.join(game.current_guess))
+
+        status = game.check_game_status()
+        if status:
+            print(status)
+            print(HANGMAN_PICS[game.attempts])  # Show final Hangman state
+            break
+
+        print("Current word state:", ' '.join(game.current_guess), "| Attempts:", game.attempts)
+
+play_hangman()
