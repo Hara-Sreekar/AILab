@@ -1,0 +1,50 @@
+N = 8
+
+def print_solution(board):
+    """Prints the chessboard with queens placed."""
+    for row in board:
+        print(" ".join("Q" if col else "." for col in row))
+    print("-" * 20)
+
+def is_safe(board, row, col):
+    """Checks if it's safe to place a queen at board[row][col]."""
+
+    for i in range(row):
+        if board[i][col]:
+            return False
+
+
+    for i, j in zip(range(row, -1, -1), range(col, -1, -1)):
+        if board[i][j]:
+            return False
+
+
+    for i, j in zip(range(row, -1, -1), range(col, N)):
+        if board[i][j]:
+            return False
+
+    return True
+
+def solve_n_queens(board, row):
+    """Uses backtracking to place queens on the board."""
+    if row >= N:
+        print_solution(board)
+        return True
+
+    for col in range(N):
+        if is_safe(board, row, col):
+            board[row][col] = 1
+            if solve_n_queens(board, row + 1):
+                return True
+            board[row][col] = 0
+
+    return False
+
+def solve():
+    """Initializes the board and calls the solver."""
+    board = [[0] * N for _ in range(N)]
+    if not solve_n_queens(board, 0):
+        print("No solution found.")
+
+
+solve()
